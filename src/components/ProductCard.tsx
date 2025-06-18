@@ -20,8 +20,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const navigate = useNavigate();
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 bg-white border border-gray-200 overflow-hidden">
-      <div className="aspect-square overflow-hidden bg-gray-50">
+    <Card className="group hover:shadow-2xl transition-all duration-300 bg-gray-900 border border-gray-800 overflow-hidden hover:border-purple-500">
+      <div className="aspect-square overflow-hidden bg-gray-800">
         <img
           src={product.image_url}
           alt={product.title}
@@ -29,13 +29,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
         />
       </div>
       <CardContent className="p-4">
-        <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-1">
+        <h3 className="font-semibold text-lg text-white mb-2 line-clamp-1">
           {product.title}
         </h3>
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+        <p className="text-gray-400 text-sm mb-3 line-clamp-2">
           {product.description}
         </p>
-        <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+        <Badge variant="secondary" className="bg-purple-900 text-purple-200 border-purple-700">
           ${product.price.toFixed(2)}
         </Badge>
       </CardContent>
