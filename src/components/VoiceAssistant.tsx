@@ -1,30 +1,70 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mic, MicOff, MessageCircle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { askGemini as generateGeminiResponse } from "@/lib/geminiClient";
+import { createEmbedding, getSimilarProducts } from "@/lib/embedUtils";
 
-const VoiceAssistant = () => {
+const VoiceAssistant = ({ currentProduct }) => {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [aiResponse, setAiResponse] = useState("");
 
   const toggleListening = () => {
-    if (!isListening) {
+    const SpeechRecognitionAPI =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognitionAPI) {
+      toast.error("Tu navegador no soporta reconocimiento de voz");
+      return;
+    }
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.lang = "es-ES";
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
       setIsListening(true);
       setIsProcessing(true);
       toast.success("¡Asistente activado! Comienza a hablar...");
-      
-      // Simulate processing
-      setTimeout(() => {
-        setIsProcessing(false);
-        toast.info("Procesando tu consulta con Gemini Live...");
-      }, 2000);
-    } else {
+    };
+
+    recognition.onerror = () => {
       setIsListening(false);
       setIsProcessing(false);
-      toast.info("Asistente desactivado");
-    }
+      toast.error("Hubo un error al escuchar tu voz");
+    };
+
+    recognition.onresult = async (event) => {
+      const userText = event.results[0][0].transcript;
+      toast.info("Procesando tu consulta...");
+
+      try {
+        const embedding = await createEmbedding(userText);
+        const similarProducts = await getSimilarProducts(embedding);
+
+        const context = similarProducts
+          .map((p) => `${p.title}: ${p.description}`)
+          .join("\n");
+
+        const prompt = `El usuario preguntó: "${userText}"\n
+Producto actual: ${currentProduct?.title} - ${currentProduct?.description}\n
+Productos relacionados:\n${context}\n
+Responde como un asesor experto en compras.`;
+
+        const response = await generateGeminiResponse(prompt);
+        setAiResponse(response);
+      } catch (err) {
+        toast.error("Error al obtener respuesta");
+        console.error(err);
+      } finally {
+        setIsListening(false);
+        setIsProcessing(false);
+      }
+    };
+
+    recognition.start();
   };
 
   return (
@@ -40,7 +80,7 @@ const VoiceAssistant = () => {
           Habla con nuestro asistente inteligente para obtener recomendaciones personalizadas,
           comparar productos y resolver todas tus dudas sobre compras.
         </p>
-        
+
         <div className="flex items-center justify-center">
           <Button
             onClick={toggleListening}
@@ -69,6 +109,15 @@ const VoiceAssistant = () => {
           <div className="flex items-center justify-center space-x-2 text-purple-600">
             <MessageCircle className="h-4 w-4 animate-bounce" />
             <span className="text-sm">Gemini Live está escuchando...</span>
+          </div>
+        )}
+
+        {aiResponse && (
+          <div className="bg-white rounded-xl p-4 text-gray-800 text-sm border border-gray-300">
+            <strong className="block mb-1 text-purple-700">
+              Respuesta de Gemini:
+            </strong>
+            <p>{aiResponse}</p>
           </div>
         )}
 
