@@ -1,73 +1,136 @@
-# Welcome to your Lovable project
+Buy n Large - Marketplace con Asistente de Voz AI (Gemini Live)
 
-## Project info
+Este proyecto es un MVP de un marketplace inteligente construido con Supabase, Lovable, y un asistente conversacional basado en Gemini Live SDK de Google. El objetivo principal es ofrecer una experiencia de compra guiada por voz con respuestas contextuales y personalizadas, gracias al uso de RAG (Retrieval-Augmented Generation).
 
-**URL**: https://lovable.dev/projects/5b8255e4-efe6-44ab-9672-ece259eedbf5
+🚀 Tecnologías Usadas
 
-## How can I edit this code?
+⚙️ Supabase – Backend como servicio, base de datos y funciones RPC.
 
-There are several ways of editing your application.
+🎨 Lovable – Frontend framework para desarrollo rápido y estilizado.
 
-**Use Lovable**
+🧠 Gemini Live SDK – Asistente de voz con IA de Google.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5b8255e4-efe6-44ab-9672-ece259eedbf5) and start prompting.
+🧲 RAG – Embeddings y recuperación de productos similares.
 
-Changes made via Lovable will be committed automatically to this repo.
+🎤 Reconocimiento de voz Web Speech API – Captura de voz del usuario en tiempo real.
 
-**Use your preferred IDE**
+📦 OpenAI Embeddings API – Generación de vectores para contexto.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+🧩 Funcionalidades
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+✅ Navegación fluida entre productos, carrito, checkout y pedidos.
 
-Follow these steps:
+🎙️ Asistente AI activado por voz que responde con contexto del producto.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+🔍 Comparación de productos similares con embeddings.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+📦 Checkout con formulario de envío y persistencia en Supabase.
 
-# Step 3: Install the necessary dependencies.
-npm i
+🛒 Carrito de compras con cantidades, persistencia y resumen.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+⚙️ Estructura del Proyecto
+
+/src
+  ├── pages/
+  │   ├── Products.jsx
+  │   ├── ProductDetail.jsx
+  │   ├── Cart.jsx
+  │   ├── Checkout.jsx
+  │   ├── Orders.jsx
+  ├── components/
+  │   ├── ProductCard.jsx
+  │   ├── VoiceAssistant.tsx ✅
+  │   ├── Navigation.jsx
+  │   ├── ProductForm.jsx
+  ├── context/
+  │   └── cartContext.jsx
+  ├── lib/
+  │   ├── supabaseClient.js
+  │   ├── embedUtils.js ✅
+  │   └── geminiClient.js ✅
+
+📌 Configuración
+
+1. Variables de entorno (.env)
+
+VITE_SUPABASE_URL=https://xxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=xxx...
+VITE_OPENAI_KEY=sk-xxx...
+VITE_GEMINI_API_KEY=AIzaSy...
+
+2. Función RPC en Supabase (match_products.sql)
+
+create extension if not exists vector;
+
+create or replace function match_products (
+  query_embedding vector(1536),
+  match_threshold float,
+  match_count int
+)
+returns table (
+  id uuid,
+  title text,
+  description text,
+  price numeric,
+  image_url text
+)
+language sql
+as $$
+  select id, title, description, price, image_url
+  from products
+  where embedding <#> query_embedding < match_threshold
+  order by embedding <#> query_embedding
+  limit match_count;
+$$;
+
+🧪 Modo de Prueba Local
+
+Cuando la API de OpenAI falla (ej. error 429), se genera un embedding simulado para pruebas locales:
+
+// embedUtils.js
+console.warn("\u{1F9EA} Usando embedding simulada para pruebas locales");
+return new Array(1536).fill(0.5);
+
+🔉 Asistente de Voz con Gemini
+
+El componente VoiceAssistant.tsx integra:
+
+Reconocimiento de voz (navegador)
+
+Generación de embeddings con createEmbedding
+
+Consulta de productos similares con match_products
+
+Envío del prompt a GeminiClient.js para generar respuesta
+
+✅ Cómo ejecutar
+
+Clonar el repositorio:
+
+git clone https://github.com/tuusuario/market-voice.git
+
+Instalar dependencias:
+
+npm install
+
+Crear .env y colocar las claves de Supabase, OpenAI y Gemini.
+
+Ejecutar el proyecto:
+
 npm run dev
-```
 
-**Edit a file directly in GitHub**
+📽️ Video Demo (YouTube)
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+En el video se muestra:
 
-**Use GitHub Codespaces**
+Navegación por el marketplace
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Activación del asistente de voz
 
-## What technologies are used for this project?
+Consulta y respuesta contextual por Gemini
 
-This project is built with:
+Flujo de compra completo con productos reales
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+🧠 Créditos
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/5b8255e4-efe6-44ab-9672-ece259eedbf5) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Este MVP fue desarrollado por Omar Bonilla en el marco de la prueba técnica para Buy n Large usando tecnologías modernas de inteligencia artificial, RAG y herramientas de desarrollo rápido.
